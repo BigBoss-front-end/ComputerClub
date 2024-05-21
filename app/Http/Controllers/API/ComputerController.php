@@ -5,8 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Services\ResponseService;
 use App\Models\Computer;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ComputerController extends Controller
@@ -14,7 +16,6 @@ class ComputerController extends Controller
     public function list(Request $request)
     {
         try {
-
             $rules = [
                 'filter.name' => 'nullable|string',
                 'filter.sort' => 'nullable|integer',
@@ -62,8 +63,13 @@ class ComputerController extends Controller
                 $model->with($request->input('with'));
             }
 
-            $computers = $model->paginate(100, ['*'], 'page', $request->filled('filter.page') ? $request->input('filter.page') : 1);
+            $model->orderBy('sort');
 
+            $computers = $model->paginate(1, ['*'], 'page', $request->filled('filter.page') ? $request->input('filter.page') : 1);
+
+            $collection = $computers->getCollection();
+            \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
+            $computers->setCollection($collection);
             return ResponseService::success([
                 'computers' => $computers
             ]);
@@ -96,15 +102,18 @@ class ComputerController extends Controller
 
             $model = Computer::query();
 
-            $model->with('bookings');
+            $model->with(['bookings']);
 
             $computer = $model->find($request->id);
 
-            ResponseService::success([
-                'computer' => $computer
+            $collection = new Collection([$computer]);
+
+            \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
+            return ResponseService::success([
+                'computer' => $collection->first()
             ]);
         } catch (\Throwable $th) {
-            ResponseService::error(['message' => $th->getMessage()]);
+            return ResponseService::error(['message' => $th->getMessage()]);
         }
     }
 
@@ -113,13 +122,14 @@ class ComputerController extends Controller
         try {
             // Заполняем недостающие данные
             $request->merge([
-                'status'  => $request->empty('status') ? 'free' : $request->status,
+                'name' => !$request->filled('name') ? 'Новый компьютер' : $request->status,
+                'status'  => !$request->filled('status') ? 'free' : $request->status,
                 'user_id' => Auth::id(),
             ]);
 
             $rules = [
                 'name' => 'required|string',
-                'sort' => 'required|integer',
+                'sort' => 'nullable|integer',
                 'status_id' => 'nullable|integer|exists:statuses,id',
                 'user_id' => 'nullable|integer|exists:users,id',
             ];
@@ -143,11 +153,14 @@ class ComputerController extends Controller
 
             $computer = $model->create($validator->validated())->refresh();
 
-            ResponseService::success([
-                'computer' => $computer
+            $collection = new Collection([$computer]);
+
+            \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
+            return ResponseService::success([
+                'computer' => $collection->first()
             ]);
         } catch (\Throwable $th) {
-            ResponseService::error(['message' => $th->getMessage()]);
+            return ResponseService::error(['message' => $th->getMessage()]);
         }
     }
 
@@ -185,11 +198,54 @@ class ComputerController extends Controller
 
             $computer = $model->find($data['id']);
 
-            ResponseService::success([
-                'computer' => $computer
+            $collection = new Collection([$computer]);
+
+            \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
+            return ResponseService::success([
+                'computer' => $collection->first()
             ]);
         } catch (\Throwable $th) {
-            ResponseService::error(['message' => $th->getMessage()]);
+            return ResponseService::error(['message' => $th->getMessage()]);
+        }
+    }
+
+    public function updateBatch(Request $request) 
+    {
+        try {
+
+            $rules = [
+                '*.id' => 'required|integer|exists:computers,id',
+                '*.name' => 'nullable|string',
+                '*.sort' => 'nullable|integer',
+                '*.status_id' => 'nullable|integer|exists:statuses,id',
+            ];
+
+            // Выполняем валидацию
+            $validator = Validator::make($request->all(), $rules);
+
+            // Проверяем, прошла ли валидация
+            if ($validator->fails()) {
+                // Если есть ошибки валидации, получаем их из объекта запроса
+                $errors = $validator->errors();
+
+                // Делаем что-то с ошибками, например, возвращаем их как ответ
+                return  ResponseService::error([
+                    'message' => 'Ошибка валидации',
+                    'errors' => $errors
+                ], 422); // 422 - Unprocessable Entity
+            }
+
+            $data = $validator->validated();
+
+            DB::transaction(function() use($data) {
+                foreach ($data as $key => $value) {
+                    Computer::query()->where('id', $value['id'])->update($value);
+                }
+            });
+
+            return ResponseService::success();
+        } catch (\Throwable $th) {
+            return ResponseService::error(['message' => $th->getMessage()]);
         }
     }
 
@@ -220,9 +276,9 @@ class ComputerController extends Controller
 
             $model->where('id', $request->id)->delete();
 
-            ResponseService::success();
+            return ResponseService::success();
         } catch (\Throwable $th) {
-            ResponseService::error(['message' => $th->getMessage()]);
+            return ResponseService::error(['message' => $th->getMessage()]);
         }
     }
 }

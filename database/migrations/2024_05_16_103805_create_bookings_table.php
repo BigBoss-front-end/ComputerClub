@@ -16,10 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('computer_id');
             $table->foreign('computer_id')->references('id')->on('computers')->onDelete('cascade');
             $table->integer('status_id');
-            $table->foreign('client_id')->references('id')->on('computers')->onDelete('cascade');
-            $table->dateTime('start_time');
-            $table->dateTime('end_time');
+            $table->unsignedBigInteger('client_id');
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->timestamp('start_time');
+            $table->timestamp('end_time');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
