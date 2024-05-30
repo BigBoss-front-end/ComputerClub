@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\LoginController;
+use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\RecoveryController;
 use App\Http\Controllers\Web\RegistrationController;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,8 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
 
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
+
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
 
     Route::get('/logout', [AuthController::class, 'logout']);
 });

@@ -24,4 +24,12 @@ $(function() {
             closeModal($(this).closest('[data-modal]'))
         })
     })
+
+
+    $(document).on('click', '[data-dropdown-button]', function() {
+        $(this).toggleClass('active')
+        let $wrapper = $(this).closest('[data-dropdown-wrapper]')
+        let $item = $wrapper.find('[data-dropdown-item]')
+        $item.slideToggle('active')
+    })
 })

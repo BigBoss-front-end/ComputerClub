@@ -1,8 +1,8 @@
-<x-modal :modalId="'computer-edit'">
+<x-remodal class="p-0" :modalId="'computer-edit'">
 
 
 
-</x-modal>
+</x-remodal>
 
 
 <script>
@@ -10,12 +10,14 @@
 </script>
 
 <script id="computer-edit-modal" type="text/template">
-    <x-form :id="'computer-edit-form'">
-        <x-form-item>
-            <x-form-label class="px-2">Имя</x-form-label>
-            <x-form-input :type="'text'" :name="'name'" :value="'<%= computer.name %>'" class="bg-transparent text-white" oninput="debouncedChangeComputerName(<%= computer.id %>, this.value)"  />
+    <x-form :id="'computer-edit-form'" :px="'10'" :py="'5'">
+        <x-form-item class="max-w-52">
+            <x-form-label class="">Имя</x-form-label>
+            <x-form-input :type="'text'" :name="'name'" :value="'<%= computer.name %>'" class="" oninput="debouncedChangeComputerName(<%= computer.id %>, this.value)"  />
             <x-form-error :name="'name'"></x-form-error>
         </x-form-item>
-        <x-form-button :data="'data-submit-btn'" :type="'button'" onclick="deteteComputer(<%= computer.id %>, this.closest('form'))" class="mx-2">Удалить</x-form-button>
+        <x-link-primary class="text-right mt-4" onclick="deleteComputer(<%= computer.id %>, this.closest('form'))">
+            Удалить
+        </x-link-primary>
     </x-form>
 </script>

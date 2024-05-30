@@ -1,3 +1,7 @@
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css'; // optional for styling
+tippy('[data-tippy-content]');
+
 import moment from 'moment';
 import { tz } from 'moment-timezone';
 window.moment = moment;
@@ -9,8 +13,18 @@ window._ = _;
 import $ from 'jquery';
 window.$ = $;
 
+import 'remodal/dist/remodal.css'
+import 'remodal/dist/remodal-default-theme.css'
+import 'remodal';
+
+import './libs/tailwind';
+
+import '../css/app.scss'
+
 import axios from 'axios';
 window.axios = axios;
+
+import 'izitoast/dist/css/iziToast.min.css';
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 

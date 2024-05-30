@@ -16,7 +16,6 @@ export const formSubmit = (form, promise) => {
     return promise()
         .then(() => {
             // Очищаем форму
-            console.log(form.reset)
             if(form.reset) {
                 form.reset()
             }

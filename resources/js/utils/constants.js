@@ -17,9 +17,16 @@ export const UPDATE_BATCH_COMPUTER_URL = '/api/computers/update/batch';
 export const DELETE_COMPUTER_URL = '/api/computers/delete';
 
 
+
 export const GET_CLIENT_LIST_URL = '/api/clients/list';
 
+export const GET_CLIENT_URL = '/api/clients/one';
+
 export const CREATE_CLIENT_URL = '/api/clients/create';
+
+export const UPDATE_CLIENT_URL = '/api/clients/update';
+
+export const DELETE_CLIENT_URL = '/api/clients/delete';
 
 
 

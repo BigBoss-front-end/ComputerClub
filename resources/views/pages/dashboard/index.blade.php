@@ -22,7 +22,7 @@
 
         @include('pages.dashboard.components.clients.index')
 
-        @include('pages.dashboard.components.booking.index')
+        {{-- @include('pages.dashboard.components.booking.index') --}}
 
     </div>
 

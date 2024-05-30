@@ -6,7 +6,9 @@
     'data' => '',
 ])
 
-<form class="submit-prevent-default px-{{$px}} py-{{$py}} bg-{{$bg}}-500" id="{{$id}}" data-form-id="{{Str::uuid()}}" {{$data}}>
+<form {{$attributes->merge([
+    "class" => "submit-prevent-default px-$px py-$py bg-$bg-500",
+])}} id="{{$id}}" data-form-id="{{Str::uuid()}}" {{$data}}>
     @csrf
     {{$slot}}
 </form>

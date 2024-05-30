@@ -11,9 +11,7 @@
     @vite('resources/css/app.scss')
     @yield('styles')
 
-    <script src="https://cdn.tailwindcss.com"></script>
     @vite('resources/js/app.js')
-    @vite(['resources/css/app.scss', 'resources/js/app.js'])
     @yield('scripts')
 </head>
 
@@ -29,13 +27,13 @@
                         <div class="h-0.5 w-8 bg-gray-600"></div>
                         <div class="h-0.5 w-8 bg-gray-600"></div>
                         <div class="h-0.5 w-8 bg-gray-600"></div>
-                      </div>
+                    </div>
                     <div class="hidden group-[.active]:block absolute top-full right-0">
                         <!-- Left Side Of Navbar -->
                         <ul class="navbar-nav me-auto">
-    
+
                         </ul>
-    
+
                         <!-- Right Side Of Navbar -->
                         <ul class="navbar-nav ms-auto">
                             <!-- Authentication Links -->
@@ -45,7 +43,7 @@
                                         <a class="text-black" href="{{ route('login') }}">{{ __('Вход') }}</a>
                                     </li>
                                 @endif
-    
+
                                 @if (Route::has('register'))
                                     <li class="bg-white px-2 py-2">
                                         <a class="text-black" href="{{ route('register') }}">{{ __('Регистрация') }}</a>
@@ -53,19 +51,21 @@
                                 @endif
                             @else
                                 <li class="bg-white px-2 py-2">
-                                    <a id="navbarDropdown" class="text-black" href="#" role="button"
-                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                    <a href="{{ route('profile') }}" id="navbarDropdown" class="text-black"
+                                        role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        v-pre>
                                         {{ Auth::user()->name }}
                                     </a>
-    
+
                                     <div class="bg-white px-2 py-2">
                                         <a class="text-black" href="{{ route('logout') }}"
                                             onclick="event.preventDefault();
                                                         document.getElementById('logout-form').submit();">
                                             {{ __('Выйти') }}
                                         </a>
-    
-                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+
+                                        <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                            class="d-none">
                                             @csrf
                                         </form>
                                     </div>
@@ -75,7 +75,7 @@
                     </div>
                 </button>
 
-                
+
             </div>
         </nav>
 

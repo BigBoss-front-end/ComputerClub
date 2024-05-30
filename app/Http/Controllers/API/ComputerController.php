@@ -51,10 +51,6 @@ class ComputerController extends Controller
                 $model->where('sort', $request->input('filter.sort'));
             }
 
-            if($request->filled('filter.status_id')) {
-                $model->where('status_id', $request->input('filter.status_id'));
-            }
-
             if($request->filled('filter.user_id')) {
                 $model->where('user_id', $request->input('filter.user_id'));
             }
@@ -65,13 +61,32 @@ class ComputerController extends Controller
 
             $model->orderBy('sort');
 
-            $computers = $model->paginate(1, ['*'], 'page', $request->filled('filter.page') ? $request->input('filter.page') : 1);
+            $computers = $model->paginate(100, ['*'], 'page', $request->filled('filter.page') ? $request->input('filter.page') : 1);
 
             $collection = $computers->getCollection();
             \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
-            $computers->setCollection($collection);
+
+            if($request->filled('filter.status_id')) {
+                $collection = $collection->filter(function($computer) use($request) {
+                    return $request->input('filter.status_id') == $computer->status->id;
+                });
+            }
+
+            if($request->filled('filter.client_name')) {
+                $collection = $collection->filter(function($computer) use($request) {
+                    if(empty($computer->client)) {
+                        return false;
+                    }
+                    $currrentName = mb_strtolower($computer->client->name);
+                    $name = mb_strtolower($request->input('filter.client_name'));
+                    return stripos($currrentName, $name) !== false || 
+                            stripos($currrentName->client->phone, $name) !== false || 
+                            stripos($currrentName->client->email, $name) !== false;
+                });
+            }
+            $computers->setCollection($collection->values());
             return ResponseService::success([
-                'computers' => $computers
+                'computers' => $computers,
             ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
@@ -157,7 +172,8 @@ class ComputerController extends Controller
 
             \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
             return ResponseService::success([
-                'computer' => $collection->first()
+                'computer' => $collection->first(),
+                'message' => 'Компьютер создан'
             ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
@@ -202,7 +218,8 @@ class ComputerController extends Controller
 
             \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
             return ResponseService::success([
-                'computer' => $collection->first()
+                'computer' => $collection->first(),
+                'message' => 'Компьютер обновлён'
             ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
@@ -276,7 +293,9 @@ class ComputerController extends Controller
 
             $model->where('id', $request->id)->delete();
 
-            return ResponseService::success();
+            return ResponseService::success([
+                'message' => 'Компьютер удален'
+            ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
         }

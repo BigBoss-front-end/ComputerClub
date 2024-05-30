@@ -15,24 +15,17 @@ import { closeModal, openModal } from "../../../utils/modal"
 import { formSubmit } from "../../../utils/functions"
 import { createSortable } from "../../../utils/sortablejs"
 import { filter } from "lodash"
+import { $rest } from "../../../utils/http"
 
 var computer = {}
 
-var computers = [];
+var computersFilterData = {}
 
 $(function () {
-    fetchAllComputers(GET_COMPUTER_LIST).then(r => {
-        r.map(computer => {
-            renderComputerCard(computer)
-        })
-    })
+    rerenderComputers(GET_COMPUTER_LIST, computersFilterData)
 
     setInterval(() => {
-        fetchAllComputers(GET_COMPUTER_LIST).then(r => {
-            r.map(computer => {
-                renderComputerCard(computer)
-            })
-        })
+        rerenderComputers(GET_COMPUTER_LIST, computersFilterData)
     }, 5000);
 
     createSortable(
@@ -69,13 +62,9 @@ $(function () {
     })
 
     $(document).on('change', '[data-free-time-select]', function () {
-
         let $current = $(`[data-free-date][data-id="${this.value}"]`)
         $(`[data-free-date][data-id="${this.value}"]`).addClass('active')
         $(`[data-free-date]`).not($current).removeClass('active')
-        // let $form = $(this).closest('form')
-        // $form.find('input[name="start_date"]').val(moment(this.value).format('YYYY-MM-DD'))
-        // $form.find('input[name="start_time"]').val(moment(this.value).format('YYYY-MM-DD'))
     })
 
     $(document).on('click', '[data-free-time]', function () {
@@ -83,31 +72,44 @@ $(function () {
         $form.find('input[name="start_date"]').val(this.getAttribute('data-free-date'))
         $form.find('input[name="start_time"]').val(this.getAttribute('data-free-time'))
     })
+
+    $(document).on('click', '[data-filter-status]', function() {
+        $(this).addClass('active').siblings('[data-filter-status]').removeClass('active')
+        let $filter = $(this).closest('form')
+        $filter.find('input[name="status_id"]').val($(this).attr('data-id')).trigger('change')
+    })
+
+    $(document).on('change', 'form#computers-filter', function() {
+        let data = Object.fromEntries(new FormData(this))
+        computersFilterData = data
+        $('#computer-list [data-computer-card]').remove()
+        rerenderComputers(GET_COMPUTER_LIST, computersFilterData)
+    })
 })
 
-const getComputers = async (url, page) => {
-    const response = await axios.post(url, {filter: {page}});
-    console.log(response.data.computers)
+const getComputers = async (url, data) => {
+    const response = await axios.post(url, {filter: data});
     return response.data.computers;
 };
 
-const fetchAllComputers = async (url) => {
+const fetchAllComputers = async (url, data = {}) => {
     let results = [];
     let page = 1;
     let totalPages = 1;
 
     // Начальный запрос для получения первой страницы и общего числа страниц
     try {
-        const initialResponse = await getComputers(url, page);
+        data.page = page
+        const initialResponse = await getComputers(url, data);
         results = results.concat(initialResponse.data);
         totalPages = initialResponse.last_page;
 
         // Запрашиваем остальные страницы
         while (page < totalPages) {
             page += 1;
-            const response = await getComputers(url, page);
+            data.page = page
+            const response = await getComputers(url, data);
             results = results.concat(response.data);
-            console.log(page)
         }
     } catch (error) {
         console.error(`Ошибка при получении данных: ${error}`);
@@ -116,9 +118,17 @@ const fetchAllComputers = async (url) => {
     return results;
 };
 
+const rerenderComputers = (url, data = {}) => {
+    fetchAllComputers(url, data).then(r => {
+        r.map(computer => {
+            renderComputerCard(computer)
+        })
+    })
+}
+
 
 const changeComputerName = async (id, name) => {
-    await axios.post(
+    await $rest.post(
         UPDATE_COMPUTER_URL,
         {
             id,
@@ -135,7 +145,7 @@ const changeComputerName = async (id, name) => {
 window.debouncedChangeComputerName = _.debounce(changeComputerName, 400)
 
 window.addComputer = () => {
-    axios.post(
+    $rest.post(
         CREATE_COMPUTER_URL,
     ).then(r => {
         renderComputerCard(r.data.computer)
@@ -144,11 +154,10 @@ window.addComputer = () => {
 }
 
 window.openComputerMenu = (id) => {
-
-    let $modal = $('[data-modal][data-modal-id="computer-menu"]')
-    closeModal($(`[data-modal]`).not($modal))
-    openModal($modal)
+    let $modal = $('[data-remodal-id="computer-menu"]')
+    console.log($modal.remodal())
     $modal.find('[data-computer-menu-button]').attr('data-id', id)
+    $modal.remodal().open()
 }
 
 window.openComputerEditModal = (id) => {
@@ -157,9 +166,9 @@ window.openComputerEditModal = (id) => {
         closeModal($('[data-modal][data-modal-id="computer-menu"]'))
         let template = (_.template(document.getElementById('computer-edit-modal').innerHTML))({ computer })
 
-        let $modal = $('[data-modal][data-modal-id="computer-edit"]')
+        let $modal = $('[data-remodal-id="computer-edit"]')
         $modal.find('[data-modal-content]').html(template)
-        openModal($modal)
+        $modal.remodal().open()
     })
 }
 
@@ -176,7 +185,7 @@ window.openComputerManageModal = (id) => {
 }
 
 window.computerMakeFree = (form) => {
-    axios.post(
+    $rest.post(
         DELETE_BOOKING_URL,
         { id: computer.booking.id }
     ).then(r => {
@@ -190,7 +199,7 @@ window.computerExtend = (form) => {
 
     let end_date = moment(computer.booking.end_time).add(data.time, 'minutes').format('YYYY-MM-DD HH:mm:ss')
 
-    axios.post(
+    $rest.post(
         UPDATE_BOOKING_URL,
         {
             id: computer.booking.id,
@@ -219,7 +228,7 @@ window.computerMakeBusy = (form) => {
     let end_date = moment(data.start_date + ' ' + data.start_time).add(data.time, 'minutes').format('YYYY-MM-DD HH:mm:ss')
 
     formSubmit(form, async () => {
-        return await axios.post(
+        return await $rest.post(
             CREATE_BOOKING_URL,
             {
                 status_id: 2,
@@ -249,7 +258,7 @@ window.computerBooking = (form) => {
     let end_date = moment(data.start_date + ' ' + data.start_time).add(data.time, 'minutes').format('YYYY-MM-DD HH:mm:ss')
 
     formSubmit(form, async () => {
-        return await axios.post(
+        return await $rest.post(
             CREATE_BOOKING_URL,
             {
                 status_id: 3,
@@ -305,7 +314,7 @@ window.addClient = (formDiv) => {
     };
 
     formSubmit(formDiv, async () => {
-        return await axios.post(
+        return await $rest.post(
             CREATE_CLIENT_URL,
             data,
         ).then(r => {
@@ -321,16 +330,14 @@ window.addClient = (formDiv) => {
     })
 }
 
-window.deteteComputer = (id, form) => {
-    formSubmit(form, async () => {
-        return await axios.post(
-            DELETE_COMPUTER_URL,
-            { id },
-        ).then(r => {
-            $(`[data-computer-card][data-id="${id}"]`).remove()
-            closeModal($('[data-modal-id="computer-edit"]'))
+window.deleteComputer = async (id, form) => {
+    return await $rest.post(
+        DELETE_COMPUTER_URL,
+        { id },
+    ).then(r => {
+        $(`[data-computer-card][data-id="${id}"]`).remove()
+        $('[data-remodal-id="computer-edit"]').remodal().close()
 
-            return r;
-        })
+        return r;
     })
 }

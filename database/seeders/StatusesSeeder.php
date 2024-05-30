@@ -17,18 +17,22 @@ class StatusesSeeder extends Seeder
             [
                 'name' => 'Свободен',
                 'alias' => 'free',
+                'color' => 'green'
             ],
             [
                 'name' => 'Занят',
                 'alias' => 'occupied',
+                'color' => 'red'
             ],
             [
                 'name' => 'Забронирован',
                 'alias' => 'booked',
+                'color' => 'gray'
             ],
             [
                 'name' => 'В ремонте',
                 'alias' => 'under_repair',
+                'color' => 'black'
             ],
         ]);
     }

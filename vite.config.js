@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/css/app.scss', 
                 'resources/js/app.js',
                 'resources/js/pages/dashboard/script.js',
+                'resources/js/pages/profile/script.js',
             ],
             refresh: true,
         }),

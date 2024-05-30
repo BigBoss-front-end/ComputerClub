@@ -8,6 +8,7 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -118,8 +119,8 @@ class ClientController extends Controller
 
             $rules = [
                 'name' => 'required|string',
-                'phone' => 'required|string',
-                'email' => 'nullable|string|email',
+                'phone' => 'required|string|unique:clients,phone',
+                'email' => 'nullable|string|email|unique:clients,email',
                 'user_id' => 'required|integer|exists:users,id',
             ];
 
@@ -143,7 +144,8 @@ class ClientController extends Controller
             $client = $model->create($validator->validated())->refresh();
 
             return ResponseService::success([
-                'client' => $client
+                'client' => $client,
+                'message' => 'Клиент создан'
             ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
@@ -156,9 +158,17 @@ class ClientController extends Controller
 
             $rules = [
                 'id' => 'required|integer|exists:clients,id',
-                'name' => 'nullable|string',
-                'phone' => 'nullable|string',
-                'email' => 'nullable|string|email',
+                'phone' => [
+                    'required',
+                    'string',
+                    Rule::unique('clients', 'phone')->ignore($request->id),
+                ],
+                'email' => [
+                    'nullable',
+                    'string',
+                    'email',
+                    Rule::unique('clients', 'email')->ignore($request->id),
+                ],
             ];
 
             // Выполняем валидацию
@@ -185,7 +195,8 @@ class ClientController extends Controller
             $client = $model->find($data['id']);
 
             return ResponseService::success([
-                'client' => $client
+                'client' => $client,
+                'message' => 'Клиент обновлён'
             ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
@@ -219,7 +230,9 @@ class ClientController extends Controller
 
             $model->where('id', $request->id)->delete();
 
-            return ResponseService::success();
+            return ResponseService::success([
+                'message' => 'Клиент удалён'
+            ]);
         } catch (\Throwable $th) {
             return ResponseService::error(['message' => $th->getMessage()]);
         }

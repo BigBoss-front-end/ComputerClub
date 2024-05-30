@@ -3,7 +3,7 @@
 ])
 
 <div {{ $attributes->merge([
-    'class' => 'mb-' . $mb . '',
+    'class' => "mb-$mb relative",
 ]) }}>
     {{ $slot }}
 </div>
