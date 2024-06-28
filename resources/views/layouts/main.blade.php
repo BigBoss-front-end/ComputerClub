@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <div id="app" class="h-screen overflow-auto">
+    <div id="app" class="h-screen  flex flex-col">
         <nav class="bg-white shadow-sm py-3">
             <div class="container flex itemx-center justify-between mx-auto">
                 <a class="" href="{{ url('/') }}">
@@ -79,7 +79,7 @@
             </div>
         </nav>
 
-        <main class="py-4 bg-dots-lighter bg-gray-900 h-screen">
+        <main class="py-4 bg-dots-lighter bg-gray-900 flex-1 overflow-auto">
             <div class="container mx-auto">
                 @yield('content')
             </div>

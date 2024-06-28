@@ -20,7 +20,7 @@ $rest.interceptors.response.use(response => {
             message: 'Ошибка валидации'
         });
     } else if(error.response.status == 500) {
-        iziToast.warning({
+        iziToast.error({
             title: 'Ошибка',
             message: 'Ошибка сервера'
         });

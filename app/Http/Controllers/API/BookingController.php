@@ -185,8 +185,14 @@ class BookingController extends Controller
                 'end_time' => 'required|date',
             ];
 
+            $messages = [
+                'client_id.required' => 'Поле "клиент" обязательно для заполнения',
+                'start_time.required' => 'Поля "Дата начала" и "Время начала" обязательны для заполнения',
+                'start_time.date' => 'Поля "Дата начала" и "Время начала" обязательны для заполнения',
+            ];
+
             // Выполняем валидацию
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->all(), $rules, $messages);
 
             // Проверяем, прошла ли валидация
             if ($validator->fails()) {

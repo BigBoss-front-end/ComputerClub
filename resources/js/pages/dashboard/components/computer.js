@@ -17,11 +17,28 @@ import { createSortable } from "../../../utils/sortablejs"
 import { filter } from "lodash"
 import { $rest } from "../../../utils/http"
 
+import AirDatepicker from 'air-datepicker';
+import 'air-datepicker/air-datepicker.css';
+import moment from "moment"
+
+
+
 var computer = {}
 
 var computersFilterData = {}
 
 $(function () {
+    new AirDatepicker('#filter-free-dates-input', {
+        language: 'ru', // Язык (опционально)
+        dateFormat: 'dd.MM.yyyy',
+        range: true,
+        timepicker: true,
+        multipleDatesSeparator: ' - ',
+        onSelect: () => {
+            $('#filter-free-dates-input').trigger('change')
+        }
+    })
+
     rerenderComputers(GET_COMPUTER_LIST, computersFilterData)
 
     setInterval(() => {
@@ -81,6 +98,7 @@ $(function () {
 
     $(document).on('change', 'form#computers-filter', function() {
         let data = Object.fromEntries(new FormData(this))
+        console.log(data)
         computersFilterData = data
         $('#computer-list [data-computer-card]').remove()
         rerenderComputers(GET_COMPUTER_LIST, computersFilterData)
@@ -88,6 +106,14 @@ $(function () {
 })
 
 const getComputers = async (url, data) => {
+    if(data.dates) {
+        let dates = _.split(data.dates, ' - ');
+        // console.log(moment(dates[0]))
+        data.date_free_from = dates[0] ? moment(dates[0], 'DD.MM.YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : null
+        data.date_free_to = dates[1] ? moment(dates[1], 'DD.MM.YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : null
+        data.dates = null
+    }
+
     const response = await axios.post(url, {filter: data});
     return response.data.computers;
 };

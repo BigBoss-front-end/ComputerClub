@@ -22,25 +22,32 @@
         </div>
         <div class="hidden mt-4" data-dropdown-item>
             <form action="" class="flex flex-wrap items-end gap-4" id="computers-filter">
-                <x-form-item class="w-full">
-                    <x-form-label>Статус</x-form-label>
-                    <x-form-input :name="'status_id'" :type="'hidden'" />
-
-                    <div class="flex gap-2 group">
-                        <div class="p-2 cursor-pointer border rounded-sm hover:bg-gray-600 [&.active]:bg-white active"
-                            data-filter-status data-id="" data-tippy-content="Все статусы">
-                            <div class="border border-black rounded-full bg-white w-5 h-5"></div>
-                        </div>
-                        @foreach ($statuses as $status)
-                            <div class="p-2 cursor-pointer border rounded-sm hover:bg-gray-600 [&.active]:bg-white"
-                                data-filter-status data-id="{{ $status->id }}"
-                                data-tippy-content="{{ $status->name }}">
-                                <div class="border border-black rounded-full bg-{{ $status->color }}-500 w-5 h-5">
-                                </div>
+                <div class="w-full flex flex-wrap items-end gap-4">
+                    <x-form-item>
+                        <x-form-label>Статус</x-form-label>
+                        <x-form-input :name="'status_id'" :type="'hidden'" />
+    
+                        <div class="flex gap-2 group">
+                            <div class="p-2 cursor-pointer border rounded-sm hover:bg-gray-600 [&.active]:bg-white active"
+                                data-filter-status data-id="" data-tippy-content="Все статусы">
+                                <div class="border border-black rounded-full bg-white w-5 h-5"></div>
                             </div>
-                        @endforeach
-                    </div>
-                </x-form-item>
+                            @foreach ($statuses as $status)
+                                <div class="p-2 cursor-pointer border rounded-sm hover:bg-gray-600 [&.active]:bg-white"
+                                    data-filter-status data-id="{{ $status->id }}"
+                                    data-tippy-content="{{ $status->name }}">
+                                    <div class="border border-black rounded-full bg-{{ $status->color }}-500 w-5 h-5">
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </x-form-item>
+                    <x-form-item class="max-w-64 w-full">
+                        <x-form-label>Свободное время</x-form-label>
+                        <x-form-input class="max-w-64 w-full" :name="'dates'" :id="'filter-free-dates-input'" />
+                    </x-form-item>
+                </div>
+                
                 <x-form-item>
                     <x-form-label>Имя</x-form-label>
                     <x-form-input :name="'name'" />

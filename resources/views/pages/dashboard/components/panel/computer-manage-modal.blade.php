@@ -12,12 +12,22 @@
 <script id="computer-manage-modal" type="text/template">
     <x-form :id="'computer-manage-form'">
         <div data-content-wrapper>
+
+            <div class="text-3xl mb-2 text-<%= computer.color  %>-500">
+                <%= computer.name %>
+            </div>
+
             <div class="flex py-3 py-3 border-b border-gray-300">
                 <button class="text-xl text-white p-2 rounded-sm cursor-pointer [&.active]:bg-gray-700 hover:bg-gray-700 active" data-content-nav data-id="computer-current">Текущий статус</button>
                 <button class="text-xl text-white p-2 rounded-sm cursor-pointer [&.active]:bg-gray-700 hover:bg-gray-700" data-content-nav data-id="computer-booking">Бронь</button>
             </div>
 
             <div data-content data-id="computer-current" class="active py-3">
+
+                <div class="errors">
+                    <x-form-error class="p-2 mb-2 rounded bg-gray-100 inline-block" :name="'dublicate'"></x-form-error>
+                    <x-form-error class="p-2 mb-2 rounded bg-gray-100 inline-block" :name="'client_id'"></x-form-error>
+                </div>
 
                 <div class="mb-2">
                     <span class="text-white">Статус:</span>
@@ -29,7 +39,7 @@
                     </span>
                 </div>
 
-                <x-form-error :name="'dublicate'"></x-form-error>
+                
                 <input type="hidden" name="time" value="0">
                 <div class="mb-3">
                     <span class="text-gray-300">Продолжительность: </span>
@@ -63,32 +73,36 @@
                             <x-form-button :type="'button'" onclick="openClientForm(this)">Добавить</x-form-button>
                             <div>
                                 <x-form-select name="client_id" id="client_select">
-                                    <option>Не выбрано</option>
+                                    <option value="">Не выбрано</option>
                                     <% allClients.map(client => { %>
                                         <option value="<%= client.id %>" <%= computer.client && computer.client.id == client.id ? 'selected' : '' %>><%= client.name %></option>
                                     <% }) %>
                                 </x-form-select>
-                                <x-form-error :name="'client_id'"></x-form-error>
                             </div>
                         </div>
-                        <div id="client-form" class="hidden" data-form-id="{{ Str::uuid() }}">
+                        <div id="client-form" class="hidden mt-3" data-form-id="{{ Str::uuid() }}">
                             <x-form-item class="max-w-52">
                                 <x-form-label>Имя</x-form-label>
-                                <x-form-input :type="'text'" :name="'name'" />
-                                <x-form-error :name="'name'"></x-form-error>
+                                <x-form-input class="w-full" :type="'text'" :name="'name'" />
                             </x-form-item>
                             <x-form-item class="max-w-52">
                                 <x-form-label>Телефон</x-form-label>
-                                <x-form-input :type="'tel'" :name="'phone'" />
-                                <x-form-error :name="'phone'"></x-form-error>
+                                <x-form-input class="w-full" :type="'tel'" :name="'phone'" />
                             </x-form-item>
                             <x-form-item class="max-w-52">
                                 <x-form-label>Почта</x-form-label>
-                                <x-form-input :type="'email'" :name="'email'" />
-                                <x-form-error :name="'email'"></x-form-error>
+                                <x-form-input class="w-full" :type="'email'" :name="'email'" />
                             </x-form-item>
 
-                            <x-form-button :type="'button'" :data="'data-submit-btn'" onclick="addClient(this.closest('#client-form'))">Добавить</x-form-button>
+                            <div>
+                                <div class="errors">
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'name'"></x-form-error>
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'phone'"></x-form-error>
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'email'"></x-form-error>
+                                </div>
+                            </div>
+
+                            <x-form-button class="block" :type="'button'" :data="'data-submit-btn'" onclick="addClient(this.closest('#client-form'))">Добавить</x-form-button>
                         </div>
                     </x-form-item>
                     <x-form-button :data="'data-submit-btn'" :type="'button'" onclick="computerMakeBusy(this.closest('form'))">Занять</x-form-button>
@@ -99,7 +113,13 @@
             <div data-content data-id="computer-booking" class="">
                 <div class="py-3 border-b border-gray-300">
                     <input type="hidden" name="time" value="0">
-                    <x-form-error :name="'dublicate'"></x-form-error>
+
+                    <div class="errors">
+                        <x-form-error class="p-2 mb-2 rounded bg-gray-100 inline-block" :name="'dublicate'"></x-form-error>
+                        <x-form-error class="p-2 mb-2 rounded bg-gray-100 inline-block" :name="'client_id'"></x-form-error>
+                        <x-form-error class="p-2 mb-2 rounded bg-gray-100 inline-block" :name="'start_time'"></x-form-error>
+                    </div>
+
                     <div class="mb-3">
                         <span class="text-gray-300">Продолжительность: </span>
                         <span data-time="0" class="text-white">0 мин.</span>
@@ -126,30 +146,34 @@
                             <x-form-button :type="'button'" onclick="openClientForm(this)">Добавить</x-form-button>
                             <div>
                                 <x-form-select name="client_id" id="client_select">
-                                    <option>Не выбрано</option>
+                                    <option value="">Не выбрано</option>
                                     <% allClients.map(client => { %>
                                         <option value="<%= client.id %>" <%= computer.client && computer.client.id == client.id ? 'selected' : '' %>><%= client.name %></option>
                                     <% }) %>
                                 </x-form-select>
-                                <x-form-error :name="'client_id'"></x-form-error>
                             </div>
                         </div>
                         <div id="client-form" class="hidden" data-form-id="{{ Str::uuid() }}">
                             <x-form-item class="max-w-52">
                                 <x-form-label>Имя</x-form-label>
                                 <x-form-input :type="'text'" :name="'name'" />
-                                <x-form-error :name="'name'"></x-form-error>
                             </x-form-item>
                             <x-form-item class="max-w-52">
                                 <x-form-label>Телефон</x-form-label>
                                 <x-form-input :type="'tel'" :name="'phone'" />
-                                <x-form-error :name="'phone'"></x-form-error>
                             </x-form-item>
                             <x-form-item class="max-w-52">
                                 <x-form-label>Почта</x-form-label>
                                 <x-form-input :type="'email'" :name="'email'" />
-                                <x-form-error :name="'email'"></x-form-error>
                             </x-form-item>
+
+                            <div>
+                                <div class="errors">
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'name'"></x-form-error>
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'phone'"></x-form-error>
+                                    <x-form-error class="p-2 mb-2 block rounded bg-gray-100" :maxW="'52'" :name="'email'"></x-form-error>
+                                </div>
+                            </div>
 
                             <x-form-button :type="'button'" :data="'data-submit-btn'" onclick="addClient(this.closest('#client-form'))">Добавить</x-form-button>
                         </div>
@@ -162,7 +186,6 @@
                         <x-form-item :mb="'0'">
                             <x-form-label>Время начала</x-form-label>
                             <x-form-input :type="'time'" :name="'start_time'" value="<%= computer.freeTimes.length ? moment(computer.freeTimes[0].times[0].start).format('HH:mm') : '' %>" />
-                            <x-form-error :name="'start_time'"></x-form-error>
                         </x-form-item>
                     </div>
                     <div class="mb-4">

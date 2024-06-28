@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Services\ResponseService;
+use App\Models\Booking;
 use App\Models\Computer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -22,6 +23,8 @@ class ComputerController extends Controller
                 'filter.status_id' => 'nullable|integer|exists:statuses,id',
                 'filter.user_id' => 'nullable|integer|exists:users,id',
                 'filter.page' => 'nullable|integer',
+                'filter.date_free_from' => 'nullable|date|date_format:Y-m-d H:i:s',
+                'filter.date_free_to' => 'nullable|date|date_format:Y-m-d H:i:s',
                 'with' => 'nullable|array',
                 'with.*' => 'nullable|string|in:bookings',
             ];
@@ -43,19 +46,19 @@ class ComputerController extends Controller
 
             $model = Computer::query();
 
-            if($request->filled('filter.name')) {
-                $model->where('name', 'LIKE', '%'.$request->input('filter.name').'%');
+            if ($request->filled('filter.name')) {
+                $model->where('name', 'LIKE', '%' . $request->input('filter.name') . '%');
             }
 
-            if($request->filled('filter.sort')) {
+            if ($request->filled('filter.sort')) {
                 $model->where('sort', $request->input('filter.sort'));
             }
 
-            if($request->filled('filter.user_id')) {
+            if ($request->filled('filter.user_id')) {
                 $model->where('user_id', $request->input('filter.user_id'));
             }
 
-            if($request->filled('with')) {
+            if ($request->filled('with')) {
                 $model->with($request->input('with'));
             }
 
@@ -66,30 +69,63 @@ class ComputerController extends Controller
             $collection = $computers->getCollection();
             \App\Http\Services\ComputerService::setStatusesAndClients($collection)::setNearest($collection)::setFreeTimes($collection);
 
-            if($request->filled('filter.status_id')) {
-                $collection = $collection->filter(function($computer) use($request) {
+            if ($request->filled('filter.status_id')) {
+                $collection = $collection->filter(function ($computer) use ($request) {
                     return $request->input('filter.status_id') == $computer->status->id;
                 });
             }
 
-            if($request->filled('filter.client_name')) {
-                $collection = $collection->filter(function($computer) use($request) {
-                    if(empty($computer->client)) {
+            if ($request->filled('filter.client_name')) {
+                $collection = $collection->filter(function ($computer) use ($request) {
+                    if (empty($computer->client)) {
                         return false;
                     }
                     $currrentName = mb_strtolower($computer->client->name);
                     $name = mb_strtolower($request->input('filter.client_name'));
-                    return stripos($currrentName, $name) !== false || 
-                            stripos($computer->client->phone, $name) !== false || 
-                            stripos($computer->client->email, $name) !== false;
+                    return stripos($currrentName, $name) !== false ||
+                        stripos($computer->client->phone, $name) !== false ||
+                        stripos($computer->client->email, $name) !== false;
                 });
             }
+
+
+            if ($request->filled('filter.date_free_from') || $request->filled('filter.date_free_to')) {
+                $model = Booking::query();
+                $model->where(function ($q) use ($request) {
+                    $q->where(function ($sq) use ($request) {
+                        $sq->where('end_time', '>', $request->input('filter.date_free_from'))->where('start_time', '<', $request->input('filter.date_free_from'));
+                    });
+                
+                    $q->orWhere(function ($sq) use ($request) {
+                        $sq->where('start_time', '>', $request->input('filter.date_free_from'));
+                    });
+                });
+
+                if ($request->filled('filter.date_free_to')) {
+                    $model->where(function($q) use($request) {
+                        $q->where(function ($sq) use ($request) {
+                            $sq->where('end_time', '<', $request->input('filter.date_free_to'));
+                        });
+                        $q->orWhere(function ($sq) use ($request) {
+                            $sq->where('start_time', '<', $request->input('filter.date_free_to'));
+                        });
+                    });
+                }
+
+                $notFreeBookings = $model->get();
+
+                $collection = $collection->filter(function ($computer) use ($notFreeBookings) {
+                    return !in_array($computer->id, $notFreeBookings->pluck('computer_id')->toArray());
+                });
+            }
+
+
             $computers->setCollection($collection->values());
             return ResponseService::success([
                 'computers' => $computers,
             ]);
         } catch (\Throwable $th) {
-            return ResponseService::error(['message' => $th->getMessage()]);
+            return ResponseService::error(['message' => $th->getMessage(), 'line' => $th->getLine(), 'trace' => $th->getTrace()]);
         }
     }
 
@@ -226,7 +262,7 @@ class ComputerController extends Controller
         }
     }
 
-    public function updateBatch(Request $request) 
+    public function updateBatch(Request $request)
     {
         try {
 
@@ -254,7 +290,7 @@ class ComputerController extends Controller
 
             $data = $validator->validated();
 
-            DB::transaction(function() use($data) {
+            DB::transaction(function () use ($data) {
                 foreach ($data as $key => $value) {
                     Computer::query()->where('id', $value['id'])->update($value);
                 }

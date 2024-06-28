@@ -14,6 +14,7 @@
     },
     "dependencies": {
         "@selectize/selectize": "^0.15.2",
+        "air-datepicker": "^3.5.3",
         "izitoast": "^1.4.0",
         "jquery": "^3.7.1",
         "lodash": "^4.17.21",

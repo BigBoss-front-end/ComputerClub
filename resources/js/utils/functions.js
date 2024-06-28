@@ -50,6 +50,11 @@ export const formValidError = (form, errors = {}, reset = false) => {
     if(reset) {
         form.querySelectorAll('[data-form-error]').forEach(input => {
             input.innerHTML = ''
+            input.classList.add('hidden')
+            input.classList.remove('border-red-500')
+        })
+        form.querySelectorAll('input:not([data-form-error]), select:not([data-form-error])').forEach(input => {
+            input.classList.remove('border-red-500')
         })
         return;
     }
@@ -58,6 +63,12 @@ export const formValidError = (form, errors = {}, reset = false) => {
         let input = form.querySelector(`[data-form-error][data-name="${key}"]`)
         if(input) {
             input.innerHTML = typeof error == 'string' ? error : error[0]
+            input.classList.remove('hidden')
+        }
+        input = form.querySelector(`input[name="${key}"]:not([data-form-error]), select[name="${key}"]:not([data-form-error])`)
+        console.log(input)
+        if(input) {
+            input.classList.add('border', 'border-red-500', 'bg-red-200')
         }
     }
 }
